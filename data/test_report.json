@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-05-15T02:42:22.132299",
+  "duration_seconds": 11.651077,
+  "total_suites": 1,
+  "passed_suites": 0,
+  "failed_suites": 1,
+  "success_rate": 0.0,
+  "results": {
+    "all_tests": false
+  }
+}
