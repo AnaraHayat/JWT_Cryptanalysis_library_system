@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup & Restore - Library Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .backup-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .backup-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(93, 64, 55, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .backup-card h2 {
+            color: var(--primary-brown);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
+        .backup-card h2 i {
+            color: var(--accent-gold);
+        }
+        
+        .backup-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .backup-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .backup-form label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .backup-form input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .backup-form input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+        }
+        
+        .backup-info {
+            background: var(--background-cream);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--accent-gold);
+        }
+        
+        .backup-info h4 {
+            color: var(--primary-brown);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .backup-info p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .backup-history {
+            margin-top: 2rem;
+        }
+        
+        .backup-history h3 {
+            color: var(--primary-brown);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--background-cream);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .history-item span {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        
+        .history-item .time {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+        
+        .status-badge.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+        }
+        
+        .status-badge.pending {
+            background: rgba(255, 152, 0, 0.1);
+            color: #FF9800;
+        }
+        
+        .warning-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #FF9800;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .warning-box h4 {
+            color: #F57C00;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .warning-box p {
+            margin: 0;
+            color: #E65100;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .progress-bar.active {
+            display: block;
+        }
+        
+        .progress-bar .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-gold), var(--primary-brown));
+            border-radius: 4px;
+            animation: progress-animation 2s ease-in-out infinite;
+            width: 30%;
+        }
+        
+        @keyframes progress-animation {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div>
+                    <h2>Library System</h2>
+                    <span>Management Portal</span>
+                </div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="books.html" class="nav-link">
+                            <i class="fas fa-book"></i>
+                            <span>Manage Books</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="members.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Manage Members</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="authors.html" class="nav-link">
+                            <i class="fas fa-pen-fancy"></i>
+                            <span>Manage Authors</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="publishers.html" class="nav-link">
+                            <i class="fas fa-building"></i>
+                            <span>Manage Publishers</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="borrowing.html" class="nav-link">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Borrow / Return</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="availability.html" class="nav-link">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Check Availability</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="fines.html" class="nav-link">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Manage Fines</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="users.html" class="nav-link">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Manage Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="backup.html" class="nav-link active">
+                            <i class="fas fa-database"></i>
+                            <span>Backup / Restore</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-database"></i>
+                    Backup & Restore Database
+                </h1>
+            </div>
+
+            <div class="backup-cards">
+                <!-- Backup Card -->
+                <div class="backup-card">
+                    <h2>
+                        <i class="fas fa-download"></i>
+                        Backup Database
+                    </h2>
+                    <p>Create a backup of the entire library database. Backups are saved to the specified location on the server.</p>
+                    
+                    <div class="backup-info">
+                        <h4><i class="fas fa-info-circle"></i> Information</h4>
+                        <p>Backups include all tables: Books, Members, Authors, Publishers, Borrowing, Fines, Users, and more.</p>
+                    </div>
+                    
+                    <div class="backup-form">
+                        <div class="form-group">
+                            <label for="backupPath">Backup File Path</label>
+                            <input type="text" id="backupPath" placeholder="e.g., C:\Backups\LibraryDB_backup.bak" value="C:\Backups\LibraryDB_backup.bak">
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="createBackup()">
+                            <i class="fas fa-download"></i> Create Backup
+                        </button>
+                    </div>
+                    
+                    <div class="progress-bar" id="backupProgress">
+                        <div class="progress"></div>
+                    </div>
+                    
+                    <div id="backupStatus" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- Restore Card -->
+                <div class="backup-card">
+                    <h2>
+                        <i class="fas fa-upload"></i>
+                        Restore Database
+                    </h2>
+                    <p>Restore the library database from a previously created backup file.</p>
+                    
+                    <div class="warning-box">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Warning</h4>
+                        <p>Restoring will overwrite all current data in the database. This action cannot be undone!</p>
+                    </div>
+                    
+                    <div class="backup-form">
+                        <div class="form-group">
+                            <label for="restorePath">Backup File to Restore</label>
+                            <input type="text" id="restorePath" placeholder="e.g., C:\Backups\LibraryDB_backup.bak">
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" onclick="confirmRestore()">
+                            <i class="fas fa-upload"></i> Restore Database
+                        </button>
+                    </div>
+                    
+                    <div class="progress-bar" id="restoreProgress">
+                        <div class="progress"></div>
+                    </div>
+                    
+                    <div id="restoreStatus" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Backup History -->
+            <div class="backup-card" style="margin-top: 2rem;">
+                <h2>
+                    <i class="fas fa-history"></i>
+                    Recent Backup Operations
+                </h2>
+                <div class="table-wrapper">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Operation</th>
+                                <th>File Path</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- History will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle" style="color: #FF9800;"></i> Confirm Restore</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1rem;">
+                    Are you sure you want to restore the database?
+                </p>
+                <p style="color: #F44336; font-weight: 500;">
+                    <i class="fas fa-warning"></i> 
+                    This will overwrite ALL current data and cannot be undone!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="restoreDatabase()">Yes, Restore</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication and role
+        const role = sessionStorage.getItem('userRole');
+        const username = sessionStorage.getItem('username');
+        
+        if (!role) {
+            window.location.href = 'index.html';
+        }
+        
+        // Only Admin can access this page
+        if (role !== 'Admin') {
+            showToast('Access denied. Admin only.', 'error');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+        }
+        
+        // Backup history stored in sessionStorage for demo
+        let backupHistory = JSON.parse(sessionStorage.getItem('backupHistory') || '[]');
+        
+        // Load history on page load
+        loadHistory();
+        
+        function loadHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            
+            if (backupHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-light);">No backup operations yet</td></tr>';
+                return;
+            }
+            
+            backupHistory.forEach(item => {
+                const statusClass = item.status === 'Success' ? 'success' : 'error';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <i class="fas ${item.operation === 'Backup' ? 'fa-download' : 'fa-upload'}" 
+                           style="color: ${item.operation === 'Backup' ? '#4CAF50' : '#FF9800'};"></i>
+                        ${item.operation}
+                    </td>
+                    <td>${item.path}</td>
+                    <td>${item.datetime}</td>
+                    <td><span class="status-badge ${statusClass}">
+                        <i class="fas ${item.status === 'Success' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        ${item.status}
+                    </span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        async function createBackup() {
+            const backupPath = document.getElementById('backupPath').value.trim();
+            
+            if (!backupPath) {
+                showToast('Please enter a backup file path', 'error');
+                return;
+            }
+            
+            // Show progress
+            document.getElementById('backupProgress').classList.add('active');
+            document.getElementById('backupStatus').innerHTML = '<span class="status-badge pending"><i class="fas fa-spinner fa-spin"></i> Creating backup...</span>';
+            
+            try {
+                const response = await fetch('/api/backup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ backupPath })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('backupProgress').classList.remove('active');
+                
+                if (data.success) {
+                    document.getElementById('backupStatus').innerHTML = '<span class="status-badge success"><i class="fas fa-check-circle"></i> Backup created successfully!</span>';
+                    showToast('Backup created successfully!', 'success');
+                    
+                    // Add to history
+                    addToHistory('Backup', backupPath, 'Success');
+                } else {
+                    document.getElementById('backupStatus').innerHTML = `<span class="status-badge error"><i class="fas fa-times-circle"></i> ${data.error || 'Backup failed'}</span>`;
+                    showToast(data.error || 'Backup failed', 'error');
+                    
+                    addToHistory('Backup', backupPath, 'Failed');
+                }
+            } catch (err) {
+                document.getElementById('backupProgress').classList.remove('active');
+                document.getElementById('backupStatus').innerHTML = '<span class="status-badge error"><i class="fas fa-times-circle"></i> Error creating backup</span>';
+                showToast('Error creating backup: ' + err.message, 'error');
+                
+                addToHistory('Backup', backupPath, 'Failed');
+            }
+        }
+        
+        function confirmRestore() {
+            const restorePath = document.getElementById('restorePath').value.trim();
+            
+            if (!restorePath) {
+                showToast('Please enter the backup file path to restore', 'error');
+                return;
+            }
+            
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+        
+        async function restoreDatabase() {
+            closeModal();
+            
+            const restorePath = document.getElementById('restorePath').value.trim();
+            
+            // Show progress
+            document.getElementById('restoreProgress').classList.add('active');
+            document.getElementById('restoreStatus').innerHTML = '<span class="status-badge pending"><i class="fas fa-spinner fa-spin"></i> Restoring database...</span>';
+            
+            try {
+                const response = await fetch('/api/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restorePath })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('restoreProgress').classList.remove('active');
+                
+                if (data.success) {
+                    document.getElementById('restoreStatus').innerHTML = '<span class="status-badge success"><i class="fas fa-check-circle"></i> Database restored successfully!</span>';
+                    showToast('Database restored successfully!', 'success');
+                    
+                    addToHistory('Restore', restorePath, 'Success');
+                } else {
+                    document.getElementById('restoreStatus').innerHTML = `<span class="status-badge error"><i class="fas fa-times-circle"></i> ${data.error || 'Restore failed'}</span>`;
+                    showToast(data.error || 'Restore failed', 'error');
+                    
+                    addToHistory('Restore', restorePath, 'Failed');
+                }
+            } catch (err) {
+                document.getElementById('restoreProgress').classList.remove('active');
+                document.getElementById('restoreStatus').innerHTML = '<span class="status-badge error"><i class="fas fa-times-circle"></i> Error restoring database</span>';
+                showToast('Error restoring database: ' + err.message, 'error');
+                
+                addToHistory('Restore', restorePath, 'Failed');
+            }
+        }
+        
+        function addToHistory(operation, path, status) {
+            const now = new Date();
+            const datetime = now.toLocaleString();
+            
+            backupHistory.unshift({ operation, path, datetime, status });
+            
+            // Keep only last 10 entries
+            if (backupHistory.length > 10) {
+                backupHistory = backupHistory.slice(0, 10);
+            }
+            
+            sessionStorage.setItem('backupHistory', JSON.stringify(backupHistory));
+            loadHistory();
+        }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

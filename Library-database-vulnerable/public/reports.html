@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Library Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div>
+                    <h2>Library System</h2>
+                    <span>Management Portal</span>
+                </div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="books.html" class="nav-link">
+                            <i class="fas fa-book"></i>
+                            <span>Manage Books</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="members.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Manage Members</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="authors.html" class="nav-link">
+                            <i class="fas fa-pen-fancy"></i>
+                            <span>Manage Authors</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="publishers.html" class="nav-link">
+                            <i class="fas fa-building"></i>
+                            <span>Manage Publishers</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="borrowing.html" class="nav-link">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Borrow / Return</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="availability.html" class="nav-link">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Check Availability</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="fines.html" class="nav-link">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Manage Fines</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link active">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="users.html" class="nav-link">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Manage Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-chart-bar"></i>
+                    Library Reports
+                </h1>
+            </div>
+
+            <!-- Report Selector Card -->
+            <div class="form-card">
+                <h2>
+                    <i class="fas fa-file-alt"></i>
+                    Select Report Type
+                </h2>
+                
+                <div class="report-selector">
+                    <select id="reportType">
+                        <option value="">-- Select a Report --</option>
+                        <option value="most-borrowed">Most Borrowed Books</option>
+                        <option value="overdue">Overdue Books</option>
+                        <option value="current-borrowed">Current Borrowed Books</option>
+                        <option value="inventory">Books Inventory Summary</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generateReport()">
+                        <i class="fas fa-chart-line"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Results -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 id="reportTitle">
+                        <i class="fas fa-table"></i>
+                        Report Results
+                    </h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="reportTable">
+                        <thead id="reportTableHead">
+                            <tr>
+                                <th colspan="5" style="text-align: center;">Select a report type to view data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 60px;">
+                                    <i class="fas fa-chart-bar" style="font-size: 48px; color: #BCAAA4;"></i>
+                                    <p style="margin-top: 15px; color: #8D6E63;">Select a report type and click "Generate Report"</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!sessionStorage.getItem('userRole')) {
+            window.location.href = 'index.html';
+        }
+
+        async function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            
+            if (!reportType) {
+                showToast('Please select a report type.', 'error');
+                return;
+            }
+            
+            try {
+                let data;
+                let columns;
+                let title;
+                
+                switch (reportType) {
+                    case 'most-borrowed':
+                        data = await API.getReportMostBorrowed();
+                        columns = ['Title', 'BorrowCount'];
+                        title = 'Most Borrowed Books';
+                        break;
+                    case 'overdue':
+                        data = await API.getReportOverdue();
+                        columns = ['MemberName', 'BookTitle', 'DueDate', 'DaysOverdue', 'FineAmount'];
+                        title = 'Overdue Books';
+                        break;
+                    case 'current-borrowed':
+                        data = await API.getReportCurrentBorrowed();
+                        columns = ['MemberName', 'Title', 'BorrowDate', 'DueDate'];
+                        title = 'Current Borrowed Books';
+                        break;
+                    case 'inventory':
+                        data = await API.getReportInventory();
+                        columns = ['Title', 'GenreName', 'AuthorName', 'PublisherName', 'TotalCopies', 'AvailableCopies', 'BorrowedCopies'];
+                        title = 'Books Inventory Summary';
+                        break;
+                    default:
+                        showToast('Invalid report type.', 'error');
+                        return;
+                }
+                
+                renderReport(data, columns, title);
+            } catch (error) {
+                showToast('Error generating report: ' + error.message, 'error');
+            }
+        }
+
+        function renderReport(data, columns, title) {
+            const thead = document.getElementById('reportTableHead');
+            const tbody = document.getElementById('reportTableBody');
+            const reportTitle = document.getElementById('reportTitle');
+            
+            reportTitle.innerHTML = `<i class="fas fa-table"></i> ${title}`;
+            
+            // Render header
+            thead.innerHTML = `
+                <tr>
+                    ${columns.map(col => `<th>${formatColumnName(col)}</th>`).join('')}
+                </tr>
+            `;
+            
+            // Render body
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="${columns.length}" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-info-circle" style="font-size: 48px; color: #BCAAA4;"></i>
+                            <p style="margin-top: 15px; color: #8D6E63;">No data found for this report</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    ${columns.map(col => `<td>${formatCellValue(row[col], col)}</td>`).join('')}
+                </tr>
+            `).join('');
+            
+            showToast(`Report generated: ${data.length} record(s) found.`, 'success');
+        }
+
+        function formatColumnName(col) {
+            // Add spaces before capital letters and capitalize first letter
+            return col.replace(/([A-Z])/g, ' $1').trim();
+        }
+
+        function formatCellValue(value, column) {
+            if (value === null || value === undefined) return '-';
+            
+            // Format dates
+            if (column.toLowerCase().includes('date')) {
+                return formatDate(value);
+            }
+            
+            // Format currency
+            if (column.toLowerCase().includes('amount')) {
+                return '$' + parseFloat(value).toFixed(2);
+            }
+            
+            return value;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

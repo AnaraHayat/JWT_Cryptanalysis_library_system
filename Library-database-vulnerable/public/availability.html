@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Availability - Library Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div>
+                    <h2>Library System</h2>
+                    <span>Management Portal</span>
+                </div>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="books.html" class="nav-link">
+                            <i class="fas fa-book"></i>
+                            <span>Manage Books</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="members.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Manage Members</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="authors.html" class="nav-link">
+                            <i class="fas fa-pen-fancy"></i>
+                            <span>Manage Authors</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="publishers.html" class="nav-link">
+                            <i class="fas fa-building"></i>
+                            <span>Manage Publishers</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="borrowing.html" class="nav-link">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Borrow / Return</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="availability.html" class="nav-link active">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Check Availability</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="fines.html" class="nav-link">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Manage Fines</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    
+                    <div class="nav-divider"></div>
+                    
+                    <li class="nav-item">
+                        <a href="users.html" class="nav-link">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Manage Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content-wrapper">
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-check-circle"></i>
+                    Check Book Availability
+                </h1>
+            </div>
+
+            <!-- Search Card -->
+            <div class="form-card">
+                <h2>
+                    <i class="fas fa-search"></i>
+                    Search Available Books
+                </h2>
+                
+                <form id="searchForm">
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="txtBookName">Book Name</label>
+                            <input type="text" id="txtBookName" placeholder="Enter book name to search for available copies..." style="width: 100%;">
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn btn-primary" onclick="searchAvailability()">
+                            <i class="fas fa-search"></i> Search Available
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearSearch()">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2>
+                        <i class="fas fa-list"></i>
+                        Available Books
+                    </h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="availabilityTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>ISBN</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="availabilityTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 60px;">
+                                    <i class="fas fa-search" style="font-size: 48px; color: #BCAAA4;"></i>
+                                    <p style="margin-top: 15px; color: #8D6E63;">Enter a book name to search for available copies</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check authentication
+        if (!sessionStorage.getItem('userRole')) {
+            window.location.href = 'index.html';
+        }
+
+        async function searchAvailability() {
+            const bookName = document.getElementById('txtBookName').value.trim();
+            
+            if (!bookName) {
+                showToast('Please enter a book name to search.', 'error');
+                return;
+            }
+            
+            try {
+                const data = await API.checkAvailability(bookName);
+                renderTable(data);
+            } catch (error) {
+                showToast('Error searching books: ' + error.message, 'error');
+            }
+        }
+
+        function renderTable(books) {
+            const tbody = document.getElementById('availabilityTableBody');
+            
+            if (books.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-book" style="font-size: 48px; color: #BCAAA4;"></i>
+                            <p style="margin-top: 15px; color: #8D6E63;">No available books found with that name</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = books.map(book => `
+                <tr>
+                    <td>${book.Title || ''}</td>
+                    <td>${book.ISBN || ''}</td>
+                    <td><span class="badge badge-success"><i class="fas fa-check"></i> Available</span></td>
+                </tr>
+            `).join('');
+            
+            showToast(`Found ${books.length} available book(s).`, 'success');
+        }
+
+        function clearSearch() {
+            document.getElementById('txtBookName').value = '';
+            document.getElementById('availabilityTableBody').innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-search" style="font-size: 48px; color: #BCAAA4;"></i>
+                        <p style="margin-top: 15px; color: #8D6E63;">Enter a book name to search for available copies</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Search on Enter key
+        document.getElementById('txtBookName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchAvailability();
+            }
+        });
+    </script>
+</body>
+</html>

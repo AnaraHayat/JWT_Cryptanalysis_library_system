@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System - Login</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h1>Library Management</h1>
+            <p>Sign in to access the system</p>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="txtUsername" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="txtPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <div id="errorMessage" class="alert alert-danger" style="display: none; margin-top: 20px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid credentials</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('txtUsername').value.trim();
+            const password = document.getElementById('txtPassword').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store role in session storage
+                    sessionStorage.setItem('userRole', data.role);
+                    sessionStorage.setItem('username', username);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorDiv.style.display = 'flex';
+                    setTimeout(() => errorDiv.style.display = 'none', 3000);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.querySelector('span').textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>

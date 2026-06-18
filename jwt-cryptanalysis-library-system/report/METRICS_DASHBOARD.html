@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<meta name='viewport' content='width=device-width, initial-scale=1' />
+<title>JWT Analysis Dashboard</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font-family: Segoe UI, Arial, sans-serif; background: #111827; color: #e5e7eb; }
+  header { padding: 28px; background: linear-gradient(135deg, #1f2937, #111827); border-bottom: 1px solid #374151; }
+  h1 { margin: 0 0 8px; }
+  .wrap { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+  .card { background: #1f2937; border: 1px solid #374151; border-radius: 14px; padding: 16px; }
+  table { width: 100%; border-collapse: collapse; background: #1f2937; border-radius: 14px; overflow: hidden; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid #374151; text-align: left; }
+  th { background: #111827; }
+  section { margin: 28px 0; }
+  ul { line-height: 1.7; }
+  .muted { color: #9ca3af; }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #374151; margin-left: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div class='wrap'>
+    <h1>JWT Cryptanalysis Dashboard</h1>
+    <div class='muted'>Entropy, brute-force, and timing metrics collected from the local library system</div>
+  </div>
+</header>
+<div class='wrap'>
+  <section>
+    <h2>Summary</h2>
+    <div class='cards'><div class='card'><h3>Brute-force</h3><p>target_found</p><p>Line: 1</p><p>Estimated seconds: 2e-05</p></div></div>
+  </section>
+  <section>
+    <h2>Entropy Analysis <span class='pill'>7 candidates</span></h2>
+    <table>
+      <thead><tr><th>Line</th><th>Secret</th><th>Length</th><th>Entropy</th></tr></thead>
+      <tbody><tr><td>4</td><td>secret</td><td>6</td><td>2.252</td></tr><tr><td>5</td><td>admin</td><td>5</td><td>2.322</td></tr><tr><td>6</td><td>letmein</td><td>7</td><td>2.522</td></tr><tr><td>3</td><td>123456</td><td>6</td><td>2.585</td></tr><tr><td>7</td><td>qwerty</td><td>6</td><td>2.585</td></tr><tr><td>2</td><td>password</td><td>8</td><td>2.75</td></tr><tr><td>1</td><td>library-secret-123</td><td>18</td><td>3.684</td></tr></tbody>
+    </table>
+  </section>
+  <section>
+    <h2>Brute-force Timeline</h2>
+    <ul><li><strong>Step 1</strong>: Prepare candidate list - Loaded 7 candidate secrets</li><li><strong>Step 2</strong>: Hash/compare candidates - Estimated at 50,000 attempts/sec</li><li><strong>Step 3</strong>: Recover target secret - Target found on line 1 in ~0.000020 seconds</li></ul>
+  </section>
+  <section>
+    <h2>Timing Comparison</h2>
+    <table>
+      <thead><tr><th>Scenario</th><th>Mean (ms)</th><th>Stdev (ms)</th><th>Min (ms)</th><th>Max (ms)</th></tr></thead>
+      <tbody><tr><td>vulnerable_valid</td><td>17.56</td><td>6.29</td><td>11.09</td><td>44.38</td></tr><tr><td>secure_valid</td><td>30.93</td><td>39.78</td><td>15.51</td><td>277.36</td></tr><tr><td>secure_forged</td><td>12.06</td><td>3.48</td><td>8.21</td><td>27.00</td></tr></tbody>
+    </table>
+    <div class='muted' style='margin-top:10px;'>Timing values are based on 50 HTTP samples per scenario collected from the local backend.</div>
+  </section>
+</div>
+</body>
+</html>
